@@ -1,11 +1,13 @@
-#include "sqlite3_base64.h"
+#include <sqlite3ext.h>
 
-#include "cencode.h"
+#include <cencode.h>
 
-#include "cdecode.h"
+#include <cdecode.h>
 
 #include <string.h>
 #include <stdint.h>
+
+SQLITE_EXTENSION_INIT1;
 
 static
 void sqlite3_base64(sqlite3_context * context, int argc, sqlite3_value ** argv) {
@@ -66,9 +68,20 @@ void sqlite3_blobfrombase64(
   }
 }
 
-int sqlite3_base64_init(sqlite3 * db)
-{
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+int sqlite3_basesixtyfour_init(
+  sqlite3 * db,
+  char **pzErrMsg,
+  const sqlite3_api_routines *pApi
+) {
+  int rc = SQLITE_OK;
+  SQLITE_EXTENSION_INIT2(pApi);
   sqlite3_create_function_v2(db, "BASE64", 1, SQLITE_ANY | SQLITE_DETERMINISTIC, NULL, sqlite3_base64, NULL, NULL, NULL);
   sqlite3_create_function_v2(db, "BLOBFROMBASE64", 1, SQLITE_ANY | SQLITE_DETERMINISTIC, NULL, sqlite3_blobfrombase64, NULL, NULL, NULL);
-  return 0;
+  return rc;
 }
+
+#define BASESF_INIT(db) sqlite3_basesixtyfour_init(db, 0, 0)
+#define BASESF_EXPOSE(db, pzErr)
