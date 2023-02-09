@@ -30,7 +30,14 @@
           '';
         };
         packages.sqlite3-base64 = packages.default;
-        packages.sqlite = pkgs.sqlite;
+        packages.sqlite = pkgs.sqlite.overrideAttrs (final: prev: {
+          src = pkgs.fetchurl {
+            url = "https://sqlite.org/snapshot/sqlite-snapshot-202302052029.tar.gz";
+            sha256 = "sha256-MNjujQGJ/QlKs/3gUGna2G6Fmc/gAZ4qxmXflWH5DH0=";
+          };
+          buildInputs = prev.buildInputs ++ [ pkgs.libb64 ];
+          NIX_CFLAGS_COMPILE = prev.NIX_CFLAGS_COMPILE + " -DSQLITE_CORE=1 -lb64 -isystem ${pkgs.libb64}/include/b64 -DSQLITE_SHELL_EXTSRC=${sqlite3-base64}/sqlite3_base64.c -DSQLITE_SHELL_EXTFUNCS=BASESF";
+        });
         defaultPackage = packages.default;
       });
 }
